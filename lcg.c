@@ -5,16 +5,16 @@
 #include <math.h>
 #include <malloc.h>
 
-// Сколько случайных чисел будет сгенерировано ЛКГ для тестирования
+// РЎРєРѕР»СЊРєРѕ СЃР»СѓС‡Р°Р№РЅС‹С… С‡РёСЃРµР» Р±СѓРґРµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРѕ Р›РљР“ РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
 #define TEST_LIMIT 1000000
-// Количество интервалов от 0 до модуля ЛКГ, для измерения количества чисел, попавших в каждый интервал, методом хи-квадрат
+// РљРѕР»РёС‡РµСЃС‚РІРѕ РёРЅС‚РµСЂРІР°Р»РѕРІ РѕС‚ 0 РґРѕ РјРѕРґСѓР»СЏ Р›РљР“, РґР»СЏ РёР·РјРµСЂРµРЅРёСЏ РєРѕР»РёС‡РµСЃС‚РІР° С‡РёСЃРµР», РїРѕРїР°РІС€РёС… РІ РєР°Р¶РґС‹Р№ РёРЅС‚РµСЂРІР°Р», РјРµС‚РѕРґРѕРј С…Рё-РєРІР°РґСЂР°С‚
 #define TEST_INTERVALS_NUMBER 20
 
 void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
 double chiSquaredTest(size_t intervalsNumber, double mid_value);
 
-// Формула - nextValue = (previousValue * multiplier + summand) % module
+// Р¤РѕСЂРјСѓР»Р° - nextValue = (previousValue * multiplier + summand) % module
 static unsigned long long nextValue = 1;
 const unsigned multiplier = 1103515245;
 const unsigned summand = 12345;
@@ -42,7 +42,7 @@ void testLCGParameters() {
 	printf("3) Is a-1 is a multiple of 4 if m is a multiple of 4?\nm %% 4 = %llu, (a - 1) %% 4 = %u\n\n", module % 4, (multiplier - 1) % 4);
 }
 
-// Наибольший общий делитель
+// РќР°РёР±РѕР»СЊС€РёР№ РѕР±С‰РёР№ РґРµР»РёС‚РµР»СЊ
 unsigned gcd(unsigned long long a, unsigned long long b){
 	unsigned long long temp;
 	while (b != 0)
@@ -56,21 +56,21 @@ unsigned gcd(unsigned long long a, unsigned long long b){
 }
 
 double chiSquaredTest(size_t intervalsNumber, double mid_value) {
-	// Текущее псевдорандомное число, выданное ЛКГ
+	// РўРµРєСѓС‰РµРµ РїСЃРµРІРґРѕСЂР°РЅРґРѕРјРЅРѕРµ С‡РёСЃР»Рѕ, РІС‹РґР°РЅРЅРѕРµ Р›РљР“
 	unsigned currentValue = 0;
 	size_t currentInterval, i;
 
-	/* Массив, в котором сохраненяется количество чисел, попавший в каждый интервал. Нулевой элемент - первый интервал,
-	* первый элемент - второй интервал, и так далее. Интервалы значений таковы: 
-	* (максимальное число, которое может быть выдано ЛКГ, то есть module - 1) / (кол-во интервалов).
-	* То есть первый интервал от 0 до module / intervalsNumber, второй - от конца первого до (module / intervalsNumber) * 2 и так далее. */
+	/* РњР°СЃСЃРёРІ, РІ РєРѕС‚РѕСЂРѕРј СЃРѕС…СЂР°РЅРµРЅСЏРµС‚СЃСЏ РєРѕР»РёС‡РµСЃС‚РІРѕ С‡РёСЃРµР», РїРѕРїР°РІС€РёР№ РІ РєР°Р¶РґС‹Р№ РёРЅС‚РµСЂРІР°Р». РќСѓР»РµРІРѕР№ СЌР»РµРјРµРЅС‚ - РїРµСЂРІС‹Р№ РёРЅС‚РµСЂРІР°Р»,
+	* РїРµСЂРІС‹Р№ СЌР»РµРјРµРЅС‚ - РІС‚РѕСЂРѕР№ РёРЅС‚РµСЂРІР°Р», Рё С‚Р°Рє РґР°Р»РµРµ. РРЅС‚РµСЂРІР°Р»С‹ Р·РЅР°С‡РµРЅРёР№ С‚Р°РєРѕРІС‹: 
+	* (РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ, РєРѕС‚РѕСЂРѕРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РІС‹РґР°РЅРѕ Р›РљР“, С‚Рѕ РµСЃС‚СЊ module - 1) / (РєРѕР»-РІРѕ РёРЅС‚РµСЂРІР°Р»РѕРІ).
+	* РўРѕ РµСЃС‚СЊ РїРµСЂРІС‹Р№ РёРЅС‚РµСЂРІР°Р» РѕС‚ 0 РґРѕ module / intervalsNumber, РІС‚РѕСЂРѕР№ - РѕС‚ РєРѕРЅС†Р° РїРµСЂРІРѕРіРѕ РґРѕ (module / intervalsNumber) * 2 Рё С‚Р°Рє РґР°Р»РµРµ. */
 	size_t* measurementsNumberInInterval = (size_t*)malloc(intervalsNumber * sizeof(size_t));
-	// До запуска генератора во всех интервалах ноль чисел
+	// Р”Рѕ Р·Р°РїСѓСЃРєР° РіРµРЅРµСЂР°С‚РѕСЂР° РІРѕ РІСЃРµС… РёРЅС‚РµСЂРІР°Р»Р°С… РЅРѕР»СЊ С‡РёСЃРµР»
 	for (i = 0; i < intervalsNumber; i++) measurementsNumberInInterval[i] = 0;
 	for (i = 0; i < TEST_LIMIT; i++) {
-		// Получаем следующее значение ЛКГ
+		// РџРѕР»СѓС‡Р°РµРј СЃР»РµРґСѓСЋС‰РµРµ Р·РЅР°С‡РµРЅРёРµ Р›РљР“
 		currentValue = nextStep();
-		// Определяем, в какой интервал оно попадает
+		// РћРїСЂРµРґРµР»СЏРµРј, РІ РєР°РєРѕР№ РёРЅС‚РµСЂРІР°Р» РѕРЅРѕ РїРѕРїР°РґР°РµС‚
 		currentInterval = ((float) currentValue / module) * intervalsNumber;
 		measurementsNumberInInterval[currentInterval]++;
 	}
