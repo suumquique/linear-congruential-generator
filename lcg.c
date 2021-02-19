@@ -9,10 +9,13 @@
 #define TEST_LIMIT 1000000
 // Количество интервалов от 0 до модуля ЛКГ, для измерения количества чисел, попавших в каждый интервал, методом хи-квадрат
 #define TEST_INTERVALS_NUMBER 20
+// Количество проводимых тестов (каждый при новой инициализации генератора)
+#define TESTS 100
 
 void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
-double chiSquaredTest(size_t intervalsNumber, double mid_value);
+void chiSquaredTest();
+double getChiSquareValue(size_t intervalsNumber, double mid_value);
 
 // Формула - nextValue = (previousValue * multiplier + summand) % module
 static unsigned long long nextValue = 1;
@@ -21,7 +24,7 @@ const unsigned summand = 12345;
 const unsigned long long module = (unsigned long long) UINT_MAX + 1;
 
 void initLCG() {
-	nextValue = (unsigned long long) time(NULL);
+	nextValue = (unsigned long long) time(NULL) + (unsigned long long) clock();
 }
 
 unsigned nextStep() {
@@ -30,9 +33,8 @@ unsigned nextStep() {
 }
 
 void main(void) {
-	initLCG();
 	testLCGParameters();
-	chiSquaredTest(TEST_INTERVALS_NUMBER, TEST_LIMIT / TEST_INTERVALS_NUMBER);
+	chiSquaredTest();
 }
 
 void testLCGParameters() {
@@ -55,7 +57,7 @@ unsigned gcd(unsigned long long a, unsigned long long b){
 	return a;
 }
 
-double chiSquaredTest(size_t intervalsNumber, double mid_value) {
+double getChiSquareValue(size_t intervalsNumber, double mid_value) {
 	// Текущее псевдорандомное число, выданное ЛКГ
 	unsigned currentValue = 0;
 	size_t currentInterval, i;
@@ -80,5 +82,34 @@ double chiSquaredTest(size_t intervalsNumber, double mid_value) {
 		xi2 += pow(measurementsNumberInInterval[i] - mid_value, 2) / mid_value;
 	}
 
-	printf("chi-squared value: %g\n\n", xi2);
+	return xi2;
+}
+
+void chiSquaredTest() {
+	double currentChiSquare;
+
+	/* Шанс значения, возвращенного функцией getChiSquareValue, попасть в определенный интервал.
+	Все шансы рассчитаны для TEST_INTERVALS_NUMBER степеней свободы. Например, шанс того, что значение будет меньше 10.85 или больше 31.41,
+	меньше 10%. Процентные точки распределения взяты из книги M. Abramowitz and I. A. Stegun, Handbook of Mathematical Functions*/
+	double fivePercentChanceLowerLimit = 10.85, twentyFivePercentChanceLowerLimit = 15.45,
+		twentyFivePercentChanceUpperLimit = 23.83, fivePercentChanceUpperLimit = 31.41;
+
+	// Количество чисел, попавших в определенный интервал. Между 5% и 95% - 90-процентный интервал.
+	size_t numbersAmountInFiftyPercentInterval = 0, numbersAmountInNinetyPercentInterval = 0;
+	for (size_t i = 0; i < TESTS; i++) {
+		initLCG();
+		currentChiSquare = getChiSquareValue(TEST_INTERVALS_NUMBER, TEST_LIMIT / TEST_INTERVALS_NUMBER);
+		if (currentChiSquare > fivePercentChanceLowerLimit && currentChiSquare < fivePercentChanceUpperLimit) 
+			numbersAmountInNinetyPercentInterval++;
+		if (currentChiSquare > twentyFivePercentChanceLowerLimit && currentChiSquare < twentyFivePercentChanceUpperLimit)
+			numbersAmountInFiftyPercentInterval++;
+	}
+
+	printf("Typically 50%% of the chi-square values at %u degrees of freedom are split between the 25%% = %g limit and the 75%% = %g limit.\n\
+In the current case, for %u tests %u%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, twentyFivePercentChanceLowerLimit,
+		twentyFivePercentChanceUpperLimit, TESTS, numbersAmountInFiftyPercentInterval);
+	printf("Typically 90%% of the chi-square values at %u degrees of freedom are split between the 5%% = %g limit and the 95%% = %g limit.\n\
+In the current case, for %u tests %u%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, fivePercentChanceLowerLimit,
+		fivePercentChanceUpperLimit, TESTS, numbersAmountInNinetyPercentInterval);
+
 }
