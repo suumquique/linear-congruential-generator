@@ -66,7 +66,7 @@ double getChiSquareValue(size_t intervalsNumber, double mid_value) {
 	* первый элемент - второй интервал, и так далее. Интервалы значений таковы: 
 	* (максимальное число, которое может быть выдано ЛКГ, то есть module - 1) / (кол-во интервалов).
 	* То есть первый интервал от 0 до module / intervalsNumber, второй - от конца первого до (module / intervalsNumber) * 2 и так далее. */
-	size_t* measurementsNumberInInterval = (size_t*)malloc(intervalsNumber * sizeof(size_t));
+	size_t* measurementsNumberInInterval = (size_t*)malloc((intervalsNumber + 1)* sizeof(size_t));
 	// До запуска генератора во всех интервалах ноль чисел
 	for (i = 0; i < intervalsNumber; i++) measurementsNumberInInterval[i] = 0;
 	for (i = 0; i < TEST_LIMIT; i++) {
@@ -108,9 +108,9 @@ void chiSquaredTest() {
 	}
 
 	printf("Typically 50%% of the chi-square values at %u degrees of freedom are split between the 25%% = %g limit and the 75%% = %g limit.\n\
-In the current case, for %u tests %u%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, twentyFivePercentChanceLowerLimit,
-		twentyFivePercentChanceUpperLimit, TESTS, numbersAmountInFiftyPercentInterval / TESTS * 100);
+In the current case, for %u tests %g%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, twentyFivePercentChanceLowerLimit,
+		twentyFivePercentChanceUpperLimit, TESTS, numbersAmountInFiftyPercentInterval / (double) TESTS * 100);
 	printf("Typically 90%% of the chi-square values at %u degrees of freedom are split between the 5%% = %g limit and the 95%% = %g limit.\n\
-In the current case, for %u tests %u%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, fivePercentChanceLowerLimit,
-		fivePercentChanceUpperLimit, TESTS, numbersAmountInNinetyPercentInterval / TESTS * 100);
+In the current case, for %u tests %g%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, fivePercentChanceLowerLimit,
+		fivePercentChanceUpperLimit, TESTS,  numbersAmountInNinetyPercentInterval / (double) TESTS * 100);
 }
