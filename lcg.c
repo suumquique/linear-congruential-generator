@@ -107,9 +107,8 @@ void chiSquaredTest() {
 
 	printf("Typically 50%% of the chi-square values at %u degrees of freedom are split between the 25%% = %g limit and the 75%% = %g limit.\n\
 In the current case, for %u tests %u%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, twentyFivePercentChanceLowerLimit,
-		twentyFivePercentChanceUpperLimit, TESTS, numbersAmountInFiftyPercentInterval);
+		twentyFivePercentChanceUpperLimit, TESTS, numbersAmountInFiftyPercentInterval / TESTS * 100);
 	printf("Typically 90%% of the chi-square values at %u degrees of freedom are split between the 5%% = %g limit and the 95%% = %g limit.\n\
 In the current case, for %u tests %u%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, fivePercentChanceLowerLimit,
-		fivePercentChanceUpperLimit, TESTS, numbersAmountInNinetyPercentInterval);
-
+		fivePercentChanceUpperLimit, TESTS, numbersAmountInNinetyPercentInterval / TESTS * 100);
 }
