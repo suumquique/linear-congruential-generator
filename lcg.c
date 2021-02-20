@@ -82,6 +82,8 @@ double getChiSquareValue(size_t intervalsNumber, double mid_value) {
 		xi2 += pow(measurementsNumberInInterval[i] - mid_value, 2) / mid_value;
 	}
 
+	free(measurementsNumberInInterval);
+
 	return xi2;
 }
 
