@@ -17,7 +17,7 @@ unsigned gcd(unsigned long long a, unsigned long long b);
 void chiSquaredTest();
 double getChiSquareValue(size_t intervalsNumber, double mid_value);
 void serialCorrelationTest();
-double getSerialCorrelationValue(size_t intervalNumber, double mid_value);
+double getSerialCorrelationValue(size_t intervalsNumber);
 
 // Формула - nextValue = (previousValue * multiplier + summand) % module
 static unsigned long long nextValue = 1;
@@ -78,21 +78,58 @@ void serialCorrelationTest() {
 	double lowerLimit = mju - 2 * sigma, higherLimit = mju + 2 * sigma;
 	for (size_t i = 0; i < TESTS; i++) {
 		initLCG();
-		currentValue = getSerialCorrelationValue(TEST_INTERVALS_NUMBER, 0);
+		currentValue = getSerialCorrelationValue(TEST_INTERVALS_NUMBER);
 		if (currentValue > lowerLimit && currentValue < higherLimit) {
 			goodValueCounter++;
 		}
 		else badValueCounter++;
 	}
 
-	printf("The percentage of \"good\" values ​​of the serial correlation criterion indicating that the sequence is random was %g%%\n\n",
-		(double)goodValueCounter / ((double) TESTS * 100));
-	printf("The percentage of \"bad\" values ​​of the serial correlation criterion indicating that the sequence isn`t random was %g%%\n\n",
-		(double)badValueCounter / ((double)TESTS * 100));
+	printf("\nThe percentage of \"good\" values of the serial correlation criterion indicating that the sequence is random was %g%%\n\n",
+		(double) goodValueCounter / TESTS * 100);
+	printf("The percentage of \"bad\" values of the serial correlation criterion indicating that the sequence isn`t random was %g%%\n\n",
+		(double) badValueCounter / TESTS * 100);
 }
 
-double getSerialCorrelationValue(size_t intervalNumber, double mid_value) {
+/*Функция считает значение критерия сериальной корреляции для ЛКГ по этой формуле: https://prnt.sc/109nzd9
+Значением Uj в данном случае является сумма всех элементов на интервале
+*/
+double getSerialCorrelationValue(size_t intervalsNumber) {
+	unsigned currentPseudorandomValue;
+	size_t currentInterval, i;
+	unsigned long long* sumOfNumbersInIntervals = (unsigned long long*) calloc((intervalsNumber + 1), sizeof(unsigned long long));
 
+	for (i = 0; i < TEST_LIMIT; i++) {
+		// Получаем следующее значение ЛКГ
+		currentPseudorandomValue = nextStep();
+		// Определяем, в какой интервал оно попадает
+		currentInterval = ((double)i / TEST_LIMIT) * intervalsNumber;
+		sumOfNumbersInIntervals[currentInterval] += currentPseudorandomValue;
+	}
+
+	double finalCriterionValue;
+	// Делимое и делитель формулы для получения итогового значения (скрин формулы в описании функции)
+	unsigned long long dividend, divisor, dividendMinuend = 0, dividendSubtrahend = 0, divisorMinuend = 0, divisorSubtrahend = 0;
+
+	for (i = 0; i < intervalsNumber - 1; i++) {
+		dividendMinuend += sumOfNumbersInIntervals[i] * sumOfNumbersInIntervals[i + 1];
+	}
+	dividendMinuend += sumOfNumbersInIntervals[i] * sumOfNumbersInIntervals[0];
+	dividendMinuend *= intervalsNumber;
+
+	for (i = 0; i < intervalsNumber; i++) dividendSubtrahend += sumOfNumbersInIntervals[i];
+	dividendSubtrahend = dividendSubtrahend * dividendSubtrahend;
+	dividend = dividendMinuend - dividendSubtrahend;
+
+	for (i = 0; i < intervalsNumber; i++) {
+		divisorMinuend += (unsigned long long) pow(sumOfNumbersInIntervals[i], 2);
+	}
+	divisorMinuend *= intervalsNumber;
+	
+	divisorSubtrahend = dividendSubtrahend;
+	divisor = divisorMinuend - divisorSubtrahend;
+
+	return (double)dividend / divisor;
 }
 
 double getChiSquareValue(size_t intervalsNumber, double mid_value) {
@@ -104,9 +141,8 @@ double getChiSquareValue(size_t intervalsNumber, double mid_value) {
 	* первый элемент - второй интервал, и так далее. Интервалы значений таковы: 
 	* (максимальное число, которое может быть выдано ЛКГ, то есть module - 1) / (кол-во интервалов).
 	* То есть первый интервал от 0 до module / intervalsNumber, второй - от конца первого до (module / intervalsNumber) * 2 и так далее. */
-	size_t* measurementsNumberInInterval = (size_t*)malloc((intervalsNumber + 1)* sizeof(size_t));
-	// До запуска генератора во всех интервалах ноль чисел
-	for (i = 0; i < intervalsNumber; i++) measurementsNumberInInterval[i] = 0;
+	size_t* measurementsNumberInInterval = (size_t*)calloc((intervalsNumber + 1), sizeof(size_t));
+
 	for (i = 0; i < TEST_LIMIT; i++) {
 		// Получаем следующее значение ЛКГ
 		currentValue = nextStep();
