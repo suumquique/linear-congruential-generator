@@ -16,6 +16,8 @@ void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
 void chiSquaredTest();
 double getChiSquareValue(size_t intervalsNumber, double mid_value);
+void serialCorrelationTest();
+double getSerialCorrelationValue(size_t intervalNumber, double mid_value);
 
 // Формула - nextValue = (previousValue * multiplier + summand) % module
 static unsigned long long nextValue = 1;
@@ -35,6 +37,7 @@ unsigned nextStep() {
 void main(void) {
 	testLCGParameters();
 	chiSquaredTest();
+	serialCorrelationTest();
 }
 
 void testLCGParameters() {
@@ -55,6 +58,41 @@ unsigned gcd(unsigned long long a, unsigned long long b){
 		b = temp;
 	}
 	return a;
+}
+
+void serialCorrelationTest() {
+	/* Критерии для проверки значения значения сериальной корреляции: μ и σ (мю и сигма).
+	* Формула для μ: μ = (-1)/(n - 1)
+	* Формула для σ: σ^2 = (n^2)/((n - 2)*((n - 1)^2))
+	* В данном случае n - количество интервалов */
+	double mju = -1.0 / (TEST_INTERVALS_NUMBER - 1);
+	double sigma = sqrt(pow(TEST_INTERVALS_NUMBER, 2) / (((double) TEST_INTERVALS_NUMBER - 2) * pow((TEST_INTERVALS_NUMBER - 1), 2)));
+
+	/* Количество "хороших" или "плохих" значений: сколько раз за определенное число тестов критерий сериальной корреляции
+	* вернул значение, попадающее в рамки случайной последовательности, а сколько раз вернул значение, показывающее,
+	* что ЛКГ недостаточно случайно */
+	size_t goodValueCounter = 0, badValueCounter = 0;
+	double currentValue = 0.0;
+
+	// Верхняя и нижняя границы "хорошего" значения критерия сериальной корреляции
+	double lowerLimit = mju - 2 * sigma, higherLimit = mju + 2 * sigma;
+	for (size_t i = 0; i < TESTS; i++) {
+		initLCG();
+		currentValue = getSerialCorrelationValue(TEST_INTERVALS_NUMBER, 0);
+		if (currentValue > lowerLimit && currentValue < higherLimit) {
+			goodValueCounter++;
+		}
+		else badValueCounter++;
+	}
+
+	printf("The percentage of \"good\" values ​​of the serial correlation criterion indicating that the sequence is random was %g%%\n\n",
+		(double)goodValueCounter / ((double) TESTS * 100));
+	printf("The percentage of \"bad\" values ​​of the serial correlation criterion indicating that the sequence isn`t random was %g%%\n\n",
+		(double)badValueCounter / ((double)TESTS * 100));
+}
+
+double getSerialCorrelationValue(size_t intervalNumber, double mid_value) {
+
 }
 
 double getChiSquareValue(size_t intervalsNumber, double mid_value) {
