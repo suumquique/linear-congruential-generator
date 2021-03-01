@@ -5,19 +5,21 @@
 #include <math.h>
 #include <malloc.h>
 
-// Сколько случайных чисел будет сгенерировано ЛКГ для тестирования
+// Сколько случайных чисел будет сгенерировано ЛКГ для тестирования хи-квадратом
 #define TEST_LIMIT 1000000
 // Количество интервалов от 0 до модуля ЛКГ, для измерения количества чисел, попавших в каждый интервал, методом хи-квадрат
 #define TEST_INTERVALS_NUMBER 20
 // Количество проводимых тестов (при запуске каждого следующего теста ЛКГ вновь инициализируется с другим начальным значением)
 #define TESTS 100
+// Количество чисел, генерируемых ЛКГ для теста критерием сериальной корреляции
+#define SERIAL_CORRELATION_NUMBERS 50000
 
 void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
 void chiSquaredTest();
 double getChiSquareValue(size_t intervalsNumber, double mid_value);
 void serialCorrelationTest();
-double getSerialCorrelationValue(size_t intervalsNumber);
+double getSerialCorrelationValue();
 
 // Формула - nextValue = (previousValue * multiplier + summand) % module
 static unsigned long long nextValue = 1;
@@ -65,8 +67,8 @@ void serialCorrelationTest() {
 	* Формула для μ: μ = (-1)/(n - 1)
 	* Формула для σ: σ^2 = (n^2)/((n - 2)*((n - 1)^2))
 	* В данном случае n - количество интервалов */
-	double mju = -1.0 / (TEST_INTERVALS_NUMBER - 1);
-	double sigma = sqrt(pow(TEST_INTERVALS_NUMBER, 2) / (((double) TEST_INTERVALS_NUMBER - 2) * pow((TEST_INTERVALS_NUMBER - 1), 2)));
+	double mju = -1.0 / (SERIAL_CORRELATION_NUMBERS - 1);
+	double sigma = sqrt(pow(SERIAL_CORRELATION_NUMBERS, 2) / (((double) SERIAL_CORRELATION_NUMBERS - 2) * pow((SERIAL_CORRELATION_NUMBERS - 1), 2)));
 
 	/* Количество "хороших" или "плохих" значений: сколько раз за определенное число тестов критерий сериальной корреляции
 	* вернул значение, попадающее в рамки случайной последовательности, а сколько раз вернул значение, показывающее,
@@ -78,7 +80,7 @@ void serialCorrelationTest() {
 	double lowerLimit = mju - 2 * sigma, higherLimit = mju + 2 * sigma;
 	for (size_t i = 0; i < TESTS; i++) {
 		initLCG();
-		currentValue = getSerialCorrelationValue(TEST_INTERVALS_NUMBER);
+		currentValue = getSerialCorrelationValue();
 		if (currentValue > lowerLimit && currentValue < higherLimit) {
 			goodValueCounter++;
 		}
@@ -94,37 +96,33 @@ void serialCorrelationTest() {
 /*Функция считает значение критерия сериальной корреляции для ЛКГ по этой формуле: https://prnt.sc/109nzd9
 Значением Uj в данном случае является сумма всех элементов на интервале
 */
-double getSerialCorrelationValue(size_t intervalsNumber) {
-	unsigned currentPseudorandomValue;
-	size_t currentInterval, i;
-	unsigned long long* sumOfNumbersInIntervals = (unsigned long long*) calloc((intervalsNumber + 1), sizeof(unsigned long long));
+double getSerialCorrelationValue() {
+	size_t i;
+	double* pseudorandomNumbers = (double*) calloc((SERIAL_CORRELATION_NUMBERS + 1), sizeof(double));
 
-	for (i = 0; i < TEST_LIMIT; i++) {
-		// Получаем следующее значение ЛКГ
-		currentPseudorandomValue = nextStep();
-		// Определяем, в какой интервал оно попадает
-		currentInterval = ((double)i / TEST_LIMIT) * intervalsNumber;
-		sumOfNumbersInIntervals[currentInterval] += currentPseudorandomValue;
+	for (i = 0; i < SERIAL_CORRELATION_NUMBERS; i++) {
+		// Делим текущее значение ЛКГ на модуль, чтобы не было переполнения
+		pseudorandomNumbers[i] = (double) nextStep() / module;
 	}
 
 	double finalCriterionValue;
 	// Делимое и делитель формулы для получения итогового значения (скрин формулы в описании функции)
-	unsigned long long dividend, divisor, dividendMinuend = 0, dividendSubtrahend = 0, divisorMinuend = 0, divisorSubtrahend = 0;
+	double dividend, divisor, dividendMinuend = 0, dividendSubtrahend = 0, divisorMinuend = 0, divisorSubtrahend = 0;
 
-	for (i = 0; i < intervalsNumber - 1; i++) {
-		dividendMinuend += sumOfNumbersInIntervals[i] * sumOfNumbersInIntervals[i + 1];
+	for (i = 0; i < SERIAL_CORRELATION_NUMBERS - 1; i++) {
+		dividendMinuend += pseudorandomNumbers[i] * pseudorandomNumbers[i + 1];
 	}
-	dividendMinuend += sumOfNumbersInIntervals[i] * sumOfNumbersInIntervals[0];
-	dividendMinuend *= intervalsNumber;
+	dividendMinuend += pseudorandomNumbers[i] * pseudorandomNumbers[0];
+	dividendMinuend *= SERIAL_CORRELATION_NUMBERS;
 
-	for (i = 0; i < intervalsNumber; i++) dividendSubtrahend += sumOfNumbersInIntervals[i];
+	for (i = 0; i < SERIAL_CORRELATION_NUMBERS; i++) dividendSubtrahend += pseudorandomNumbers[i];
 	dividendSubtrahend = dividendSubtrahend * dividendSubtrahend;
 	dividend = dividendMinuend - dividendSubtrahend;
 
-	for (i = 0; i < intervalsNumber; i++) {
-		divisorMinuend += (unsigned long long) pow(sumOfNumbersInIntervals[i], 2);
+	for (i = 0; i < SERIAL_CORRELATION_NUMBERS; i++) {
+		divisorMinuend += pow(pseudorandomNumbers[i], 2);
 	}
-	divisorMinuend *= intervalsNumber;
+	divisorMinuend *= SERIAL_CORRELATION_NUMBERS;
 	
 	divisorSubtrahend = dividendSubtrahend;
 	divisor = divisorMinuend - divisorSubtrahend;
