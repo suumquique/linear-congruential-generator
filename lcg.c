@@ -14,6 +14,8 @@
 // Количество чисел, генерируемых ЛКГ для теста критерием сериальной корреляции
 #define SERIAL_CORRELATION_NUMBERS 50000
 
+#define printDelimeter() printf("----------------------------------------------------------------------------------------------------\n\n")
+
 void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
 void chiSquaredTest();
@@ -47,6 +49,7 @@ void testLCGParameters() {
 	printf("2) Is a-1 multiple of p for every p prime divisor of m?\na - 1 = %u, single prime divisor of m = 2\n(a - 1) %% 2 = %u\n\n",
 		multiplier - 1, (multiplier - 1) % 2);
 	printf("3) Is a-1 is a multiple of 4 if m is a multiple of 4?\nm %% 4 = %llu, (a - 1) %% 4 = %u\n\n", module % 4, (multiplier - 1) % 4);
+	printDelimeter();
 }
 
 // Наибольший общий делитель
@@ -185,4 +188,5 @@ In the current case, for %u tests %g%% values fell into this interval\n\n", TEST
 	printf("Typically 90%% of the chi-square values at %u degrees of freedom are split between the 5%% = %g limit and the 95%% = %g limit.\n\
 In the current case, for %u tests %g%% values fell into this interval\n\n", TEST_INTERVALS_NUMBER, fivePercentChanceLowerLimit,
 		fivePercentChanceUpperLimit, TESTS,  numbersAmountInNinetyPercentInterval / (double) TESTS * 100);
+	printDelimeter();
 }
