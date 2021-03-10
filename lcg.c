@@ -23,7 +23,7 @@
 void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
 void chiSquaredTest(size_t remainingBitsNumber);
-double getChiSquareValue(size_t intervalsNumber, double mid_value);
+double getChiSquareValue(size_t intervalsNumber, double mid_value, size_t remainingBitsNumber);
 void serialCorrelationTest(size_t remainingBitsNumber);
 double getSerialCorrelationValue(size_t remainingBitsNumber);
 
@@ -48,7 +48,6 @@ void main(void) {
 	serialCorrelationTest(MAXIMUM_BITS_NUMBER_IN_UNSIGNED_INT);
 	printDelimeter();
 	puts("Now let's check the randomness of the least significant bits (half of the total):\n\n");
-	chiSquaredTest(HALF_BITS_NUMBER_IN_UNSIGNED_INT);
 	serialCorrelationTest(HALF_BITS_NUMBER_IN_UNSIGNED_INT);
 }
 
