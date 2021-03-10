@@ -14,14 +14,18 @@
 // Количество чисел, генерируемых ЛКГ для теста критерием сериальной корреляции
 #define SERIAL_CORRELATION_NUMBERS 50000
 
+// Число бит в целом unsigned int и в половине, чтобы проверять случайность как для полных значений, выдаваемых ЛКГ, так и для младших бит
+#define MAXIMUM_BITS_NUMBER_IN_UNSIGNED_INT 32
+#define HALF_BITS_NUMBER_IN_UNSIGNED_INT 16
+
 #define printDelimeter() printf("----------------------------------------------------------------------------------------------------\n\n")
 
 void testLCGParameters();
 unsigned gcd(unsigned long long a, unsigned long long b);
-void chiSquaredTest();
+void chiSquaredTest(size_t remainingBitsNumber);
 double getChiSquareValue(size_t intervalsNumber, double mid_value);
-void serialCorrelationTest();
-double getSerialCorrelationValue();
+void serialCorrelationTest(size_t remainingBitsNumber);
+double getSerialCorrelationValue(size_t remainingBitsNumber);
 
 // Формула - nextValue = (previousValue * multiplier + summand) % module
 static unsigned long long nextValue = 1;
@@ -40,8 +44,12 @@ unsigned nextStep() {
 
 void main(void) {
 	testLCGParameters();
-	chiSquaredTest();
-	serialCorrelationTest();
+	chiSquaredTest(MAXIMUM_BITS_NUMBER_IN_UNSIGNED_INT);
+	serialCorrelationTest(MAXIMUM_BITS_NUMBER_IN_UNSIGNED_INT);
+	printDelimeter();
+	puts("Now let's check the randomness of the least significant bits (half of the total):\n\n");
+	chiSquaredTest(HALF_BITS_NUMBER_IN_UNSIGNED_INT);
+	serialCorrelationTest(HALF_BITS_NUMBER_IN_UNSIGNED_INT);
 }
 
 void testLCGParameters() {
@@ -65,7 +73,9 @@ unsigned gcd(unsigned long long a, unsigned long long b){
 	return a;
 }
 
-void serialCorrelationTest() {
+/* remainingBitsNumber - количество бит, которые требуется оставить. Если мы смотрим полное число (unsigned int) - то 32,
+* если только младшие биты - то 16 */
+void serialCorrelationTest(size_t remainingBitsNumber) {
 	/* Критерии для проверки значения значения сериальной корреляции: μ и σ (мю и сигма).
 	* Формула для μ: μ = (-1)/(n - 1)
 	* Формула для σ: σ^2 = (n^2)/((n - 2)*((n - 1)^2))
@@ -83,7 +93,7 @@ void serialCorrelationTest() {
 	double lowerLimit = mju - 2 * sigma, higherLimit = mju + 2 * sigma;
 	for (size_t i = 0; i < TESTS; i++) {
 		initLCG();
-		currentValue = getSerialCorrelationValue();
+		currentValue = getSerialCorrelationValue(remainingBitsNumber);
 		if (currentValue > lowerLimit && currentValue < higherLimit) {
 			goodValueCounter++;
 		}
@@ -99,13 +109,13 @@ void serialCorrelationTest() {
 /*Функция считает значение критерия сериальной корреляции для ЛКГ по этой формуле: https://prnt.sc/109nzd9
 Значением Uj в данном случае является сумма всех элементов на интервале
 */
-double getSerialCorrelationValue() {
+double getSerialCorrelationValue(size_t remainingBitsNumber) {
 	size_t i;
 	double* pseudorandomNumbers = (double*) calloc((SERIAL_CORRELATION_NUMBERS + 1), sizeof(double));
 
 	for (i = 0; i < SERIAL_CORRELATION_NUMBERS; i++) {
 		// Делим текущее значение ЛКГ на модуль, чтобы не было переполнения
-		pseudorandomNumbers[i] = (double) nextStep() / module;
+		pseudorandomNumbers[i] = (double) (nextStep() % (unsigned long long) pow(2, remainingBitsNumber)) / module;
 	}
 
 	double finalCriterionValue;
@@ -133,7 +143,7 @@ double getSerialCorrelationValue() {
 	return (double)dividend / divisor;
 }
 
-double getChiSquareValue(size_t intervalsNumber, double mid_value) {
+double getChiSquareValue(size_t intervalsNumber, double mid_value, size_t remainingBitsNumber) {
 	// Текущее псевдорандомное число, выданное ЛКГ
 	unsigned currentValue = 0;
 	size_t currentInterval, i;
@@ -146,9 +156,9 @@ double getChiSquareValue(size_t intervalsNumber, double mid_value) {
 
 	for (i = 0; i < TEST_LIMIT; i++) {
 		// Получаем следующее значение ЛКГ
-		currentValue = nextStep();
+		currentValue = nextStep() % (unsigned long long) pow(2, remainingBitsNumber);
 		// Определяем, в какой интервал оно попадает
-		currentInterval = ((float) currentValue / module) * intervalsNumber;
+		currentInterval = ((float) currentValue / (unsigned long long) pow(2, remainingBitsNumber)) * intervalsNumber;
 		measurementsNumberInInterval[currentInterval]++;
 	}
 
@@ -162,7 +172,7 @@ double getChiSquareValue(size_t intervalsNumber, double mid_value) {
 	return xi2;
 }
 
-void chiSquaredTest() {
+void chiSquaredTest(size_t remainingBitsNumber) {
 	double currentChiSquare;
 
 	/* Шанс значения, возвращенного функцией getChiSquareValue, попасть в определенный интервал.
@@ -175,7 +185,7 @@ void chiSquaredTest() {
 	size_t numbersAmountInFiftyPercentInterval = 0, numbersAmountInNinetyPercentInterval = 0;
 	for (size_t i = 0; i < TESTS; i++) {
 		initLCG();
-		currentChiSquare = getChiSquareValue(TEST_INTERVALS_NUMBER, TEST_LIMIT / TEST_INTERVALS_NUMBER);
+		currentChiSquare = getChiSquareValue(TEST_INTERVALS_NUMBER, TEST_LIMIT / TEST_INTERVALS_NUMBER, remainingBitsNumber);
 		if (currentChiSquare > fivePercentChanceLowerLimit && currentChiSquare < fivePercentChanceUpperLimit) 
 			numbersAmountInNinetyPercentInterval++;
 		if (currentChiSquare > twentyFivePercentChanceLowerLimit && currentChiSquare < twentyFivePercentChanceUpperLimit)
