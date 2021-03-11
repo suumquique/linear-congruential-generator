@@ -39,7 +39,7 @@ void initLCG() {
 
 unsigned nextStep() {
 	nextValue = nextValue * multiplier + summand;
-	return (unsigned) (nextValue % module);
+	return (unsigned long) ((nextValue / USHRT_MAX) % module);
 }
 
 void main(void) {
@@ -48,6 +48,7 @@ void main(void) {
 	serialCorrelationTest(MAXIMUM_BITS_NUMBER_IN_UNSIGNED_INT);
 	printDelimeter();
 	puts("Now let's check the randomness of the least significant bits (half of the total):\n\n");
+	chiSquaredTest(HALF_BITS_NUMBER_IN_UNSIGNED_INT);
 	serialCorrelationTest(HALF_BITS_NUMBER_IN_UNSIGNED_INT);
 }
 
