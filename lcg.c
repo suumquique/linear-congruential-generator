@@ -107,7 +107,7 @@ void serialCorrelationTest(size_t remainingBitsNumber) {
 }
 
 /*Функция считает значение критерия сериальной корреляции для ЛКГ по этой формуле: https://prnt.sc/109nzd9
-Значением Uj в данном случае является сумма всех элементов на интервале
+Значением Uj в данном случае является следующее число последовательности, генерируемой ЛКГ, n - количество этих чисел
 */
 double getSerialCorrelationValue(size_t remainingBitsNumber) {
 	size_t i;
